@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="robots" content="noindex, nofollow">
+<title>Watch</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+  }
+  /* Fill the viewport. 100dvh tracks mobile browser chrome as it hides. */
+  #player {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    border: 0;
+    display: block;
+  }
+  #message {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    color: #8a8a8a;
+    background: #000;
+    font: 15px/1.5 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<script>
+// A player page, and nothing else. Opening a youtube-nocookie /embed/ URL
+// directly sends no Referer, which YouTube rejects with "Error 153". Loading
+// the same embed inside this page gives it an origin to check, so playback
+// works. No analytics, no cookies, no network calls beyond the iframe itself.
+(function () {
+  "use strict";
+
+  // YouTube IDs are exactly 11 characters of base64url.
+  var ID = /^[A-Za-z0-9_-]{11}$/;
+
+  function fail(text) {
+    var el = document.createElement("div");
+    el.id = "message";
+    el.textContent = text;          // textContent, never innerHTML
+    document.body.appendChild(el);
+  }
+
+  var id;
+  try {
+    id = new URLSearchParams(window.location.search).get("v");
+  } catch (e) {
+    id = null;
+  }
+
+  if (!id) {
+    fail("No video specified.");
+    return;
+  }
+  if (!ID.test(id)) {
+    // Never echo the rejected value back into the page.
+    fail("That doesn't look like a YouTube video ID.");
+    return;
+  }
+
+  var frame = document.createElement("iframe");
+  frame.id = "player";
+  // Built only from the validated ID.
+  frame.src = "https://www.youtube-nocookie.com/embed/" +
+              encodeURIComponent(id) + "?autoplay=1&rel=0";
+  frame.title = "Video player";
+  frame.referrerPolicy = "strict-origin-when-cross-origin";
+  frame.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+  frame.allowFullscreen = true;
+  document.body.appendChild(frame);
+})();
+</script>
+<noscript><div id="message">This player needs JavaScript enabled.</div></noscript>
+</body>
+</html>
